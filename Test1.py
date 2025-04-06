@@ -1,9 +1,15 @@
-from vizdoom import *
+import vizdoom as vzd
+#Previamente "from vizdoom import *" cambio por recomendacion del seba, para tener autocompletar.
+import os
 import random
 import time
 
-game = DoomGame()
-game.load_config("githubVizDoom/ViZDoom/scenarios/basic.cfg")
+game = vzd.DoomGame()
+
+#game.load_config("githubVizDoom/ViZDoom/scenarios/basic.cfg")  
+game.load_config(os.path.join(vzd.scenarios_path, "basic.cfg")) 
+#Ambas formas de cargar config funcionan, la 1ra es la que aparece en la pag de vizdoom, la segunda es una recomendacion del seba.
+
 game.init()
 
 shoot = [0, 0, 1]
