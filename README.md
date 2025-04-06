@@ -22,7 +22,7 @@ pip install vizdoom stable-baselines3[extra] numpy matplotlib scikit-image
 
 o
 
-pip install -r requirements.txt"
+pip install -r requirements.txt
 ```
 5. Crear una nueva carpeta dentro de la carpeta del repositorio (yo la llame githubVizDoom por lo tanto asi aparece en el codigo)
 ```
@@ -43,8 +43,8 @@ code .
 >Python: Select Interpreter
 ```
 y elijan el que sea como venv/bin/python. CREO que con la extension de wsl esto lo hace automaticamente al abrir vscode desde la terminal de ubuntu con el ambiente activado
-10. Ahora deberia funcionar test1.py, yo uso la extension autorunner para correr codigo
-11. (EXTRA) Para desactivar el ambiente pueden usar
+11. Ahora deberia funcionar test1.py, yo uso la extension autorunner para correr codigo
+12. (EXTRA) Para desactivar el ambiente pueden usar
 ```
 deactivate
 ```
