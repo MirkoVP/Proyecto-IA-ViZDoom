@@ -41,7 +41,7 @@ TRAINING_TIMESTEPS = int(NUM_EPISODES * EPISODE_LENGTH)
 #TRAINING_TIMESTEPS = int(1e4)  # 600k 200k 1000k
 N_ENVS = 1
 FRAME_SKIP = 4
-TIC_RATE = 560
+#TIC_RATE = 560
 
 CURRENT_DIR = Path(os.path.abspath('')).resolve()
 old_save = False # True to load old models, False to train from scratch
@@ -50,23 +50,22 @@ old_dir_ppo = CURRENT_DIR.parent / "trains/corridor/ppo-stop-4-1"
 
 #num = f"2-btn(menos)-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
 #num = f"4-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
-num = f"Seba-4"
+num = f"Seba-6"
 
 class RewardShapingWrapper(RewardWrapper):
-    def __init__(self, env, hit_taken_penalty=-100, alive_reward=4): #, damage_reward=50, kill_reward = 150.0, ammo_penalty=-50, step_penalty=-1.0
+    def __init__(self, env, health_loss_penalty=-1): #, damage_reward=50, kill_reward = 150.0, ammo_penalty=-50, step_penalty=-1.0
         #Original: self, env, damage_reward=100, hit_taken_penalty=-3, ammo_penalty=-1
         #self, env, survive_reward=0.1, advance_reward=1.0, hit_taken_penalty=-3.0, kill_reward=50.0, hit_reward=5.0
         super(RewardShapingWrapper, self).__init__(env)
 
         # self.damage_reward = damage_reward
-        self.hit_taken_penalty = hit_taken_penalty
+        self.health_loss_penalty = health_loss_penalty
         # self.ammo_penalty = ammo_penalty
         # self.kill_reward = kill_reward
         # self.previous_damage_taken = 0
-        self.previous_hitcount = 0
+        self.previous_healthcount = 0
         # self.previous_ammo = 0
         # self.step_penalty = step_penalty
-        self.alive_reward = alive_reward
 
     def reset(self, **kwargs):
 
@@ -75,7 +74,7 @@ class RewardShapingWrapper(RewardWrapper):
         #print(f"Game variables: {game_variables}")
         #print(f"Length: {len(game_variables)}")
         #DAMAGE_TAKEN, HITCOUNT
-        self.previous_hitcount = game_variables[0]  # HITS_TAKEN
+        self.previous_healthcount = game_variables[0]  # HITS_TAKEN
         # self.previous_damage_taken = game_variables[1]  # DAMAGE_TAKEN
         # self.previous_hitcount = game_variables[2]  # HITCOUNT
         # self.previous_ammo = game_variables[3]  # SELECTED_WEAPON_AMMO
@@ -93,22 +92,19 @@ class RewardShapingWrapper(RewardWrapper):
 
         if game_state:
             game_variables = game_state.game_variables
-            current_hitcount = game_variables[0]  # HITS_TAKEN
+            current_healthcount = game_variables[0]  # HITS_TAKEN
             # current_damage_taken = game_variables[1]  # DAMAGE_TAKEN
             # current_hitcount = game_variables[2]  # HITCOUNT
             # current_ammo = game_variables[3]  # SELECTED_WEAPON_AMMO
             # current_killcount = game_variables[4]  # KILLCOUNT
 
             # penalty por recibir daño
-            if current_hitcount > self.previous_hitcount:
-                hitcount_delta = current_hitcount - self.previous_hitcount
-                reward_gain = hitcount_delta * self.hit_taken_penalty
+            if current_healthcount > self.previous_healthcount:
+                healthcount_delta = self.previous_healthcount - current_healthcount
+                reward_gain = healthcount_delta * self.health_loss_penalty
                 custom_reward += reward_gain
                 #print(f"Recompensa por hacer daño: {reward_gain}, Hits hechos: {hitcount_delta}, Recompensa actual: {custom_reward}")
-            self.previous_hitcount = current_hitcount
-
-            # Recompensa por tiempo vivo
-            custom_reward += self.alive_reward
+            self.previous_healthcount = current_healthcount
 
         #print(f"Reward custom: {custom_reward}")
         return custom_reward
@@ -274,7 +270,7 @@ class EnvWrapper:
 if __name__ == "__main__":
     env_kwargs = {
         "frame_skip": FRAME_SKIP,
-        "tic_rate": TIC_RATE,
+        #"tic_rate": TIC_RATE,
         #"render_mode": "human"
     }
 
@@ -286,15 +282,14 @@ if __name__ == "__main__":
     for model in MODEL_LIST:
         for map_name, env_name in zip(MAP_LIST[start_index:], ENV_LIST[start_index:]):
             LOG_DIR = CURRENT_DIR.parent / f"trains/{map_name}/{model}-{num}"
+            if not os.path.exists(str(LOG_DIR)):
+                os.makedirs(str(LOG_DIR))
 
-            if not os.path.exists(LOG_DIR):
-                os.makedirs(LOG_DIR)
-
-            log_file_path = LOG_DIR / f"training_log.txt"  # Guardar el log en el mismo directorio que LOG_DIR
+            log_file_path = str(LOG_DIR / f"training_log.txt")  # Guardar el log en el mismo directorio que LOG_DIR
 
             with open(log_file_path, 'w') as log_file:
-                env_wrapper_train = EnvWrapper(log_dir=LOG_DIR / f"train_monitor.csv")
-                env_wrapper_eval = EnvWrapper(log_dir=LOG_DIR / f"eval_monitor.csv")
+                env_wrapper_train = EnvWrapper(log_dir=str(LOG_DIR / f"train_monitor.csv"))
+                env_wrapper_eval = EnvWrapper(log_dir=str(LOG_DIR / f"eval_monitor.csv"))
 
                 train_env = make_vec_env(env_name, n_envs=N_ENVS, wrapper_class=env_wrapper_train, env_kwargs=env_kwargs)
                 train_env = VecTransposeImage(train_env)
@@ -304,8 +299,8 @@ if __name__ == "__main__":
 
                 evaluation_callback = callbacks.EvalCallback(
                     eval_env,
-                    best_model_save_path=LOG_DIR / f"models",
-                    log_path=LOG_DIR / f"eval",
+                    best_model_save_path=str(LOG_DIR / f"models"),
+                    log_path=str(LOG_DIR / f"eval"),
                     eval_freq=500,
                     render=False,
                     n_eval_episodes=50,
@@ -364,13 +359,13 @@ if __name__ == "__main__":
 
                     agent.exploration_schedule = epsilon_schedule_fn
 
-                    epsilon_logger = EpsilonLogger(LOG_DIR)
+                    epsilon_logger = EpsilonLogger(str(LOG_DIR))
 
                     agent.learn(total_timesteps=TRAINING_TIMESTEPS, tb_log_name="dqn", callback=[evaluation_callback, epsilon_logger])
-                    agent.save(LOG_DIR / f"saves/dqn_vizdoom")
-                    agent.save_replay_buffer(LOG_DIR / f"saves/replay_buffer")
-                    if not os.path.exists(LOG_DIR / f"policy"): os.makedirs(LOG_DIR / f"policy")
-                    agent.policy.save(LOG_DIR / f"policy/pesos.zip")
+                    agent.save(str(LOG_DIR / f"saves/dqn_vizdoom"))
+                    agent.save_replay_buffer(str(LOG_DIR / f"saves/replay_buffer"))
+                    if not os.path.exists(str(LOG_DIR / f"policy")): os.makedirs(str(LOG_DIR / f"policy"))
+                    agent.policy.save(str(LOG_DIR / f"policy/pesos.zip"))
 
                     log_file.write(f"Parameters: {params}\n")
 
@@ -413,9 +408,9 @@ if __name__ == "__main__":
                             device='cuda'
                         )
                     agent.learn(total_timesteps=TRAINING_TIMESTEPS, tb_log_name="ppo", callback=[evaluation_callback])
-                    agent.save(LOG_DIR / f"saves/ppo_vizdoom")
-                    if not os.path.exists(LOG_DIR / f"policy"): os.makedirs(LOG_DIR / f"policy")
-                    agent.policy.save(LOG_DIR / f"policy/pesos.zip")
+                    agent.save(str(LOG_DIR / f"saves/ppo_vizdoom"))
+                    if not os.path.exists(str(LOG_DIR / f"policy")): os.makedirs(str(LOG_DIR / f"policy"))
+                    agent.policy.save(str(LOG_DIR / f"policy/pesos.zip"))
 
                     log_file.write(f"Parameters: {params}\n")
 
@@ -426,7 +421,7 @@ if __name__ == "__main__":
                 train_env.close()
                 eval_env.close()
 
-                plot_rewards(LOG_DIR, model)
+                plot_rewards(str(LOG_DIR), model)
 
 
 
