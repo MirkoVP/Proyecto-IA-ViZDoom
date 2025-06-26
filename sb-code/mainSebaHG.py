@@ -20,13 +20,13 @@ from utils import plot_rewards
 from params import DQN_PARAMS, PPO_PARAMS
 
 ENV_LIST = [
-    #"VizdoomHealthGathering-v0",
-    "VizdoomTakeCover-v0",
+    "VizdoomHealthGathering-v0",
+    #"VizdoomTakeCover-v0",
 ]
 
 MAP_LIST = [
-    #"health-gathering",
-    "take-cover",
+    "health-gathering",
+    #"take-cover",
 ]
 
 MODEL_LIST = [
@@ -35,35 +35,36 @@ MODEL_LIST = [
 ]
 
 RESOLUTION = (60, 45)
-NUM_EPISODES = 50
-EPISODE_LENGTH = 80
-TRAINING_TIMESTEPS = int(NUM_EPISODES * EPISODE_LENGTH)
-#TRAINING_TIMESTEPS = int(1e4)  # 600k 200k 1000k
+# NUM_EPISODES = 20
+# EPISODE_LENGTH = 80
+# TRAINING_TIMESTEPS = int(NUM_EPISODES * EPISODE_LENGTH)
+TRAINING_TIMESTEPS = int(1e4)  # 600k 200k 1000k
 N_ENVS = 1
 FRAME_SKIP = 4
 #TIC_RATE = 560
 
 CURRENT_DIR = Path(os.path.abspath('')).resolve()
 old_save = False # True to load old models, False to train from scratch
-old_dir_dqn = CURRENT_DIR.parent / "trains/corridor/dqn-stop-2"
-old_dir_ppo = CURRENT_DIR.parent / "trains/corridor/ppo-stop-4-1"
+old_dir_dqn = CURRENT_DIR.parent / "trains" / "health-gathering" / "dqn-3"
+old_dir_ppo = CURRENT_DIR.parent / "trains" / "health-gathering" / "ppo-1"
 
 #num = f"2-btn(menos)-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
 #num = f"4-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
-num = f"Seba-6"
+num = f"Seba-1"
 
 class RewardShapingWrapper(RewardWrapper):
-    def __init__(self, env, health_loss_penalty=-1): #, damage_reward=50, kill_reward = 150.0, ammo_penalty=-50, step_penalty=-1.0
+    def __init__(self, env, above_70_reward=1, healings_rewards=10): #, damage_reward=50, kill_reward = 150.0, ammo_penalty=-50, step_penalty=-1.0
         #Original: self, env, damage_reward=100, hit_taken_penalty=-3, ammo_penalty=-1
         #self, env, survive_reward=0.1, advance_reward=1.0, hit_taken_penalty=-3.0, kill_reward=50.0, hit_reward=5.0
         super(RewardShapingWrapper, self).__init__(env)
 
         # self.damage_reward = damage_reward
-        self.health_loss_penalty = health_loss_penalty
+        self.above_70_reward = above_70_reward
+        self.healings_rewards = healings_rewards
         # self.ammo_penalty = ammo_penalty
         # self.kill_reward = kill_reward
         # self.previous_damage_taken = 0
-        self.previous_healthcount = 0
+        self.previous_heal_count = 0
         # self.previous_ammo = 0
         # self.step_penalty = step_penalty
 
@@ -74,7 +75,7 @@ class RewardShapingWrapper(RewardWrapper):
         #print(f"Game variables: {game_variables}")
         #print(f"Length: {len(game_variables)}")
         #DAMAGE_TAKEN, HITCOUNT
-        self.previous_healthcount = game_variables[0]  # HITS_TAKEN
+        self.previous_heal_count = game_variables[1]  # ITEMCOUNT
         # self.previous_damage_taken = game_variables[1]  # DAMAGE_TAKEN
         # self.previous_hitcount = game_variables[2]  # HITCOUNT
         # self.previous_ammo = game_variables[3]  # SELECTED_WEAPON_AMMO
@@ -92,21 +93,22 @@ class RewardShapingWrapper(RewardWrapper):
 
         if game_state:
             game_variables = game_state.game_variables
-            current_healthcount = game_variables[0]  # HITS_TAKEN
+            current_health = game_variables[0]  # HEALTH
+            current_heal_count = game_variables[1] # ITEMCOUNT
             # current_damage_taken = game_variables[1]  # DAMAGE_TAKEN
             # current_hitcount = game_variables[2]  # HITCOUNT
             # current_ammo = game_variables[3]  # SELECTED_WEAPON_AMMO
             # current_killcount = game_variables[4]  # KILLCOUNT
 
-            # penalty por recibir daño
-            if current_healthcount > self.previous_healthcount:
-                healthcount_delta = self.previous_healthcount - current_healthcount
-                reward_gain = healthcount_delta * self.health_loss_penalty
+            # recompensa por tener sobre 70 de vida
+            if current_health >= 70:
+                custom_reward += self.above_70_reward
+            #Recompensa por recoger heals
+            if current_heal_count > self.previous_heal_count:
+                heal_count_delta = current_heal_count - self.previous_heal_count
+                reward_gain = heal_count_delta * self.healings_rewards
                 custom_reward += reward_gain
-                #print(f"Recompensa por hacer daño: {reward_gain}, Hits hechos: {hitcount_delta}, Recompensa actual: {custom_reward}")
-            self.previous_healthcount = current_healthcount
-
-        #print(f"Reward custom: {custom_reward}")
+            self.previous_heal_count = current_heal_count
         return custom_reward
 
 class RewardShapingWrapperDeathMatch(RewardWrapper):
@@ -340,7 +342,7 @@ if __name__ == "__main__":
                             device='cuda'
                         )
                         #agent.load_replay_buffer(f"{old_dir_dqn}/saves/replay_buffer")
-                        agent.policy.load(f"{old_dir_dqn}/policy/pesos.zip")
+                        agent.policy.load(str(old_dir_dqn / "policy" / "pesos.zip"))
                     else:
                         agent = DQN(
                             "CnnPolicy",
