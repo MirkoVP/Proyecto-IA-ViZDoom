@@ -30,27 +30,27 @@ MAP_LIST = [
 ]
 
 MODEL_LIST = [
-    "dqn",
-    #"ppo"
+    #"dqn",
+    "ppo"
 ]
 
 RESOLUTION = (60, 45)
-NUM_EPISODES = 50
-EPISODE_LENGTH = 80
-TRAINING_TIMESTEPS = int(NUM_EPISODES * EPISODE_LENGTH)
-#TRAINING_TIMESTEPS = int(1e4)  # 600k 200k 1000k
+# NUM_EPISODES = 50
+# EPISODE_LENGTH = 80
+# TRAINING_TIMESTEPS = int(NUM_EPISODES * EPISODE_LENGTH)
+TRAINING_TIMESTEPS = int(5e4)  # 600k 200k 1000k 2e5
 N_ENVS = 1
 FRAME_SKIP = 4
 #TIC_RATE = 560
 
 CURRENT_DIR = Path(os.path.abspath('')).resolve()
 old_save = False # True to load old models, False to train from scratch
-old_dir_dqn = CURRENT_DIR.parent / "trains/corridor/dqn-stop-2"
-old_dir_ppo = CURRENT_DIR.parent / "trains/corridor/ppo-stop-4-1"
+old_dir_dqn = CURRENT_DIR.parent / "trains" / "take-cover" / "dqn-Seba-v2-1"
+old_dir_ppo = CURRENT_DIR.parent / "trains" / "take-cover" / "ppo-Seba-v2-1"
 
 #num = f"2-btn(menos)-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
 #num = f"4-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
-num = f"Seba-6"
+num = f"Seba-v2-1"
 
 class RewardShapingWrapper(RewardWrapper):
     def __init__(self, env, hit_taken_penalty=-50): #, damage_reward=50, kill_reward = 150.0, ammo_penalty=-50, step_penalty=-1.0
@@ -101,7 +101,7 @@ class RewardShapingWrapper(RewardWrapper):
             # penalty por recibir un ataque
             if current_hit_taken_count > self.previous_hit_taken_count:
                 healthcount_delta =current_hit_taken_count - self.previous_hit_taken_count
-                reward_gain = healthcount_delta * self.health_loss_penalty
+                reward_gain = healthcount_delta * self.hit_taken_penalty
                 custom_reward += reward_gain
                 #print(f"Recompensa por hacer daño: {reward_gain}, Hits hechos: {hitcount_delta}, Recompensa actual: {custom_reward}")
             self.previous_hit_taken_count = current_hit_taken_count
@@ -311,7 +311,7 @@ if __name__ == "__main__":
 
                     total_steps = TRAINING_TIMESTEPS
                     initial_epsilon = 1.0
-                    final_epsilon = params.get("exploration_final_eps", 0.05)
+                    final_epsilon = params.get("exploration_final_eps", 0.2)
                     exploration_fraction = params.get("exploration_fraction", 0.1)
                     learning_starts = params.get("learning_starts", 1000)
                     decay_start_steps = params.get("decay_start_steps", 0)
@@ -340,7 +340,7 @@ if __name__ == "__main__":
                             device='cuda'
                         )
                         #agent.load_replay_buffer(f"{old_dir_dqn}/saves/replay_buffer")
-                        agent.policy.load(f"{old_dir_dqn}/policy/pesos.zip")
+                        agent.policy.load(str(old_dir_dqn / "policy" / "pesos.zip"))
                     else:
                         agent = DQN(
                             "CnnPolicy",
@@ -382,14 +382,14 @@ if __name__ == "__main__":
                             gamma=params.get("gamma", 0.99),
                             gae_lambda=params.get("gae_lambda", 0.95),
                             clip_range=params.get("clip_range", 0.2),
-                            ent_coef=params.get("ent_coef", 0.0),
+                            ent_coef=params.get("ent_coef", 0.05),
                             vf_coef=params.get("vf_coef", 0.5),
                             clip_range_vf=params.get("clip_range_vf", None),
                             target_kl=params.get("target_kl", 0.01),
                             verbose=1,
                             device='cuda'
                         )
-                        agent.policy.load(f"{old_dir_ppo}/policy/pesos.zip")
+                        agent.policy.load(str(old_dir_ppo / "policy" / "pesos.zip"))
                     else:
                         agent = PPO(
                             "CnnPolicy",
@@ -400,7 +400,7 @@ if __name__ == "__main__":
                             gamma=params.get("gamma", 0.99),
                             gae_lambda=params.get("gae_lambda", 0.95),
                             clip_range=params.get("clip_range", 0.2),
-                            ent_coef=params.get("ent_coef", 0.0),
+                            ent_coef=params.get("ent_coef", 0.05),
                             vf_coef=params.get("vf_coef", 0.5),
                             clip_range_vf=params.get("clip_range_vf", None),
                             target_kl=params.get("target_kl", 0.01),

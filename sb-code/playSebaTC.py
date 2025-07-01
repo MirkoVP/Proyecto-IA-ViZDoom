@@ -12,28 +12,27 @@ from pathlib import Path
 
 import vizdoom.gymnasium_wrapper
 
-ENV = "VizdoomHealthGathering-v0"
+ENV = "VizdoomTakeCover-v0"
 RESOLUTION = (60, 45)
 
-model = "dqn"
-num = "Seba-1"
-map = "health-gathering"
+model = "ppo"
+num = "Seba-v2-1"
+map = "take-cover"
 CURRENT_DIR = Path(os.path.abspath('')).resolve()
 #MODEL_PATH = f"trains/{map}/{model}-{num}/saves/{model}_vizdoom"
 MODEL_PATH = str(CURRENT_DIR.parent / f"trains/{map}/{model}-{num}/models/best_model")
 
 class RewardShapingWrapper(RewardWrapper):
-    def __init__(self, env, above_70_reward=1, healings_rewards=10):
+    def __init__(self, env, hit_taken_penalty=-50):
         super(RewardShapingWrapper, self).__init__(env)
-        self.above_70_reward = above_70_reward
-        self.healings_rewards = healings_rewards
-        self.previous_heal_count = 0
+        self.hit_taken_penalty = hit_taken_penalty
+        self.previous_hit_taken_count = 0
 
     def reset(self, **kwargs):
         obs, info = self.env.reset(**kwargs)
         game_variables = self.env.unwrapped.game.get_state().game_variables
 
-        self.previous_heal_count = game_variables[1]  # ITEMCOUNT
+        self.previous_hit_taken_count = game_variables[0]  # HITS_TAKEN
 
         #print(f"Game variables: {game_variables}")
         #print(f"Reset: Damage taken: {self.previous_damage_taken}, Hitcount: {self.previous_hitcount}, Ammo: {self.previous_ammo}")
@@ -47,18 +46,15 @@ class RewardShapingWrapper(RewardWrapper):
 
         if game_state:
             game_variables = game_state.game_variables
-            current_health = game_variables[0]  # HEALTH
-            current_heal_count = game_variables[1] # ITEMCOUNT
+            current_hit_taken_count = game_variables[0]  # HITS_TAKEN
 
-            # recompensa por tener sobre 70 de vida
-            if current_health >= 70:
-                custom_reward += self.above_70_reward
-            #Recompensa por recoger heals
-            if current_heal_count > self.previous_heal_count:
-                heal_count_delta = current_heal_count - self.previous_heal_count
-                reward_gain = heal_count_delta * self.healings_rewards
+            # penalty por recibir un ataque
+            if current_hit_taken_count > self.previous_hit_taken_count:
+                healthcount_delta =current_hit_taken_count - self.previous_hit_taken_count
+                reward_gain = healthcount_delta * self.hit_taken_penalty
                 custom_reward += reward_gain
-            self.previous_heal_count = current_heal_count
+                #print(f"Recompensa por hacer daño: {reward_gain}, Hits hechos: {hitcount_delta}, Recompensa actual: {custom_reward}")
+            self.previous_hit_taken_count = current_hit_taken_count
 
         #print(f"Reward custom: {custom_reward}")
         return custom_reward

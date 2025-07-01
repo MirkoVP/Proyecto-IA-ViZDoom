@@ -30,27 +30,27 @@ MAP_LIST = [
 ]
 
 MODEL_LIST = [
-    "dqn",
-    #"ppo"
+    #"dqn",
+    "ppo"
 ]
 
 RESOLUTION = (60, 45)
 # NUM_EPISODES = 20
 # EPISODE_LENGTH = 80
 # TRAINING_TIMESTEPS = int(NUM_EPISODES * EPISODE_LENGTH)
-TRAINING_TIMESTEPS = int(1e4)  # 600k 200k 1000k
+TRAINING_TIMESTEPS = int(5e4)  # 600k 200k 1000k
 N_ENVS = 1
 FRAME_SKIP = 4
 #TIC_RATE = 560
 
 CURRENT_DIR = Path(os.path.abspath('')).resolve()
 old_save = False # True to load old models, False to train from scratch
-old_dir_dqn = CURRENT_DIR.parent / "trains" / "health-gathering" / "dqn-3"
-old_dir_ppo = CURRENT_DIR.parent / "trains" / "health-gathering" / "ppo-1"
+old_dir_dqn = CURRENT_DIR.parent / "trains" / "health-gathering" / "dqn-Seba-v2-1"
+old_dir_ppo = CURRENT_DIR.parent / "trains" / "health-gathering" / "ppo-Seba-v2-1"
 
 #num = f"2-btn(menos)-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
 #num = f"4-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
-num = f"Seba-1"
+num = f"Seba-v2-1"
 
 class RewardShapingWrapper(RewardWrapper):
     def __init__(self, env, above_70_reward=1, healings_rewards=10): #, damage_reward=50, kill_reward = 150.0, ammo_penalty=-50, step_penalty=-1.0
@@ -380,29 +380,29 @@ if __name__ == "__main__":
                             train_env,
                             n_steps=params.get("n_steps", 2048),
                             batch_size=params.get("batch_size", 64),
-                            learning_rate=params.get("learning_rate", 3e-4),
+                            learning_rate=params.get("learning_rate", 1e-4),
                             gamma=params.get("gamma", 0.99),
                             gae_lambda=params.get("gae_lambda", 0.95),
                             clip_range=params.get("clip_range", 0.2),
-                            ent_coef=params.get("ent_coef", 0.0),
+                            ent_coef=params.get("ent_coef", 0.1),
                             vf_coef=params.get("vf_coef", 0.5),
                             clip_range_vf=params.get("clip_range_vf", None),
                             target_kl=params.get("target_kl", 0.01),
                             verbose=1,
                             device='cuda'
                         )
-                        agent.policy.load(f"{old_dir_ppo}/policy/pesos.zip")
+                        agent.policy.load(str(old_dir_ppo / "policy" / "pesos.zip"))
                     else:
                         agent = PPO(
                             "CnnPolicy",
                             train_env,
                             n_steps=params.get("n_steps", 2048),
                             batch_size=params.get("batch_size", 64),
-                            learning_rate=params.get("learning_rate", 3e-4),
+                            learning_rate=params.get("learning_rate", 1e-4),
                             gamma=params.get("gamma", 0.99),
                             gae_lambda=params.get("gae_lambda", 0.95),
                             clip_range=params.get("clip_range", 0.2),
-                            ent_coef=params.get("ent_coef", 0.0),
+                            ent_coef=params.get("ent_coef", 0.1),
                             vf_coef=params.get("vf_coef", 0.5),
                             clip_range_vf=params.get("clip_range_vf", None),
                             target_kl=params.get("target_kl", 0.01),
