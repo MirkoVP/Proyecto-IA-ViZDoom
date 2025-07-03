@@ -15,8 +15,8 @@ import vizdoom.gymnasium_wrapper
 ENV = "VizdoomTakeCover-v0"
 RESOLUTION = (60, 45)
 
-model = "ppo"
-num = "Seba-v2-1"
+model = "dqn"
+num = "Seba-v3-1"
 map = "take-cover"
 CURRENT_DIR = Path(os.path.abspath('')).resolve()
 #MODEL_PATH = f"trains/{map}/{model}-{num}/saves/{model}_vizdoom"
@@ -101,7 +101,7 @@ if __name__ == "__main__":
     print(f"Num: {num}")
 
     episode = 0
-    for _ in range(50):
+    for _ in range(10):
         obs = env.reset()
         done = False
         total_reward = 0

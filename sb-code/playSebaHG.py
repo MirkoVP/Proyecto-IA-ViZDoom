@@ -52,15 +52,26 @@ class RewardShapingWrapper(RewardWrapper):
             current_health = game_variables[0]  # HEALTH
             current_heal_count = game_variables[1] # ITEMCOUNT
 
-            # recompensa por tener sobre 70 de vida
-            if current_health >= 70:
-                custom_reward += self.above_70_reward
-            #Recompensa por recoger heals
-            if current_heal_count > self.previous_heal_count:
-                heal_count_delta = current_heal_count - self.previous_heal_count
-                reward_gain = heal_count_delta * self.healings_rewards
-                custom_reward += reward_gain
-            self.previous_heal_count = current_heal_count
+            if(model == "dqn"):
+                # recompensa por tener sobre 70 de vida
+                if current_health >= 70:
+                    custom_reward += self.above_70_reward
+                #Recompensa por recoger heals
+                if current_heal_count > self.previous_heal_count:
+                    heal_count_delta = current_heal_count - self.previous_heal_count
+                    reward_gain = heal_count_delta * self.healings_rewards
+                    custom_reward += reward_gain
+                self.previous_heal_count = current_heal_count
+            else:
+                if current_health <= 70:
+                    custom_reward -= self.above_70_reward
+                if current_heal_count == self.previous_heal_count:
+                    custom_reward -= self.above_70_reward
+                if current_heal_count > self.previous_heal_count:
+                    heal_count_delta = current_heal_count - self.previous_heal_count
+                    reward_gain = heal_count_delta * self.healings_rewards * 5
+                    custom_reward += reward_gain
+                self.previous_heal_count = current_heal_count
 
         return custom_reward
 
@@ -106,7 +117,7 @@ if __name__ == "__main__":
     print(f"Num: {num}")
 
     episode = 0
-    for _ in range(50):
+    for _ in range(10):
         obs = env.reset()
         done = False
         total_reward = 0

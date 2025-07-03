@@ -38,7 +38,7 @@ RESOLUTION = (60, 45)
 # NUM_EPISODES = 20
 # EPISODE_LENGTH = 80
 # TRAINING_TIMESTEPS = int(NUM_EPISODES * EPISODE_LENGTH)
-TRAINING_TIMESTEPS = int(5e4)  # 600k 200k 1000k
+TRAINING_TIMESTEPS = int(6e5)  # 600k 200k 1000k
 N_ENVS = 1
 FRAME_SKIP = 4
 #TIC_RATE = 560
@@ -50,10 +50,10 @@ old_dir_ppo = CURRENT_DIR.parent / "trains" / "health-gathering" / "ppo-Seba-v2-
 
 #num = f"2-btn(menos)-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
 #num = f"4-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
-num = f"Seba-v2-1"
+num = f"Seba-v4-1"
 
 class RewardShapingWrapper(RewardWrapper):
-    def __init__(self, env, above_70_reward=1, healings_rewards=10): #, damage_reward=50, kill_reward = 150.0, ammo_penalty=-50, step_penalty=-1.0
+    def __init__(self, env, above_70_reward=1, healings_rewards=20): #, damage_reward=50, kill_reward = 150.0, ammo_penalty=-50, step_penalty=-1.0
         #Original: self, env, damage_reward=100, hit_taken_penalty=-3, ammo_penalty=-1
         #self, env, survive_reward=0.1, advance_reward=1.0, hit_taken_penalty=-3.0, kill_reward=50.0, hit_reward=5.0
         super(RewardShapingWrapper, self).__init__(env)
@@ -99,7 +99,7 @@ class RewardShapingWrapper(RewardWrapper):
             # current_hitcount = game_variables[2]  # HITCOUNT
             # current_ammo = game_variables[3]  # SELECTED_WEAPON_AMMO
             # current_killcount = game_variables[4]  # KILLCOUNT
-
+            # if(MODEL_LIST[0] == "dqn"):
             # recompensa por tener sobre 70 de vida
             if current_health >= 70:
                 custom_reward += self.above_70_reward
@@ -109,6 +109,16 @@ class RewardShapingWrapper(RewardWrapper):
                 reward_gain = heal_count_delta * self.healings_rewards
                 custom_reward += reward_gain
             self.previous_heal_count = current_heal_count
+            # else:
+            #     if current_health <= 70:
+            #         custom_reward -= self.above_70_reward
+            #     if current_heal_count == self.previous_heal_count:
+            #         custom_reward -= self.above_70_reward
+            #     if current_heal_count > self.previous_heal_count:
+            #         heal_count_delta = current_heal_count - self.previous_heal_count
+            #         reward_gain = heal_count_delta * self.healings_rewards * 5
+            #         custom_reward += reward_gain
+            #     self.previous_heal_count = current_heal_count
         return custom_reward
 
 class RewardShapingWrapperDeathMatch(RewardWrapper):
@@ -378,13 +388,13 @@ if __name__ == "__main__":
                         agent = PPO(
                             "CnnPolicy",
                             train_env,
-                            n_steps=params.get("n_steps", 2048),
+                            n_steps=2048,
                             batch_size=params.get("batch_size", 64),
-                            learning_rate=params.get("learning_rate", 1e-4),
+                            learning_rate=1e-4,
                             gamma=params.get("gamma", 0.99),
                             gae_lambda=params.get("gae_lambda", 0.95),
                             clip_range=params.get("clip_range", 0.2),
-                            ent_coef=params.get("ent_coef", 0.1),
+                            ent_coef=0.2,
                             vf_coef=params.get("vf_coef", 0.5),
                             clip_range_vf=params.get("clip_range_vf", None),
                             target_kl=params.get("target_kl", 0.01),
@@ -396,13 +406,13 @@ if __name__ == "__main__":
                         agent = PPO(
                             "CnnPolicy",
                             train_env,
-                            n_steps=params.get("n_steps", 2048),
+                            n_steps=2048,
                             batch_size=params.get("batch_size", 64),
-                            learning_rate=params.get("learning_rate", 1e-4),
+                            learning_rate=1e-4,
                             gamma=params.get("gamma", 0.99),
                             gae_lambda=params.get("gae_lambda", 0.95),
                             clip_range=params.get("clip_range", 0.2),
-                            ent_coef=params.get("ent_coef", 0.1),
+                            ent_coef=0.2,
                             vf_coef=params.get("vf_coef", 0.5),
                             clip_range_vf=params.get("clip_range_vf", None),
                             target_kl=params.get("target_kl", 0.01),

@@ -38,7 +38,7 @@ RESOLUTION = (60, 45)
 # NUM_EPISODES = 50
 # EPISODE_LENGTH = 80
 # TRAINING_TIMESTEPS = int(NUM_EPISODES * EPISODE_LENGTH)
-TRAINING_TIMESTEPS = int(5e4)  # 600k 200k 1000k 2e5
+TRAINING_TIMESTEPS = int(2e5)  # 600k 200k 1000k 2e5
 N_ENVS = 1
 FRAME_SKIP = 4
 #TIC_RATE = 560
@@ -50,7 +50,7 @@ old_dir_ppo = CURRENT_DIR.parent / "trains" / "take-cover" / "ppo-Seba-v2-1"
 
 #num = f"2-btn(menos)-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
 #num = f"4-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
-num = f"Seba-v2-1"
+num = f"Seba-v3-1"
 
 class RewardShapingWrapper(RewardWrapper):
     def __init__(self, env, hit_taken_penalty=-50): #, damage_reward=50, kill_reward = 150.0, ammo_penalty=-50, step_penalty=-1.0
