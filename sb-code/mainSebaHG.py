@@ -38,19 +38,19 @@ RESOLUTION = (60, 45)
 # NUM_EPISODES = 20
 # EPISODE_LENGTH = 80
 # TRAINING_TIMESTEPS = int(NUM_EPISODES * EPISODE_LENGTH)
-TRAINING_TIMESTEPS = int(6e5)  # 600k 200k 1000k
+TRAINING_TIMESTEPS = int(4e5)  # 600k 200k 1000k
 N_ENVS = 1
 FRAME_SKIP = 4
 #TIC_RATE = 560
 
 CURRENT_DIR = Path(os.path.abspath('')).resolve()
 old_save = False # True to load old models, False to train from scratch
-old_dir_dqn = CURRENT_DIR.parent / "trains" / "health-gathering" / "dqn-Seba-v2-1"
-old_dir_ppo = CURRENT_DIR.parent / "trains" / "health-gathering" / "ppo-Seba-v2-1"
+old_dir_dqn = CURRENT_DIR.parent / "trains" / "health-gathering" / "dqn-Seba-v4-1"
+old_dir_ppo = CURRENT_DIR.parent / "trains" / "health-gathering" / "ppo-Seba-v4-1"
 
 #num = f"2-btn(menos)-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
 #num = f"4-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
-num = f"Seba-v4-1"
+num = f"Seba-v4-2"
 
 class RewardShapingWrapper(RewardWrapper):
     def __init__(self, env, above_70_reward=1, healings_rewards=20): #, damage_reward=50, kill_reward = 150.0, ammo_penalty=-50, step_penalty=-1.0
@@ -234,11 +234,11 @@ class ObservationWrapper(gym.ObservationWrapper):
         self.image_shape = shape
         self.image_shape_reverse = shape[::-1]
 
-        #Set number of channels to 1 for grayscale
-        new_shape = (shape[0], shape[1], 1)
-        self.observation_space = gym.spaces.Box(
-            0, 255, shape=new_shape, dtype=np.uint8
-        )
+        # #Set number of channels to 1 for grayscale
+        # new_shape = (shape[0], shape[1], 1)
+        # self.observation_space = gym.spaces.Box(
+        #     0, 255, shape=new_shape, dtype=np.uint8
+        # )
 
         # Create new observation space with the new shape
         num_channels = env.observation_space["screen"].shape[-1]
@@ -248,10 +248,12 @@ class ObservationWrapper(gym.ObservationWrapper):
         )
 
     def observation(self, observation):
+        # observation = cv2.resize(observation["screen"], self.image_shape_reverse)
+        # gray = cv2.cvtColor(observation, cv2.COLOR_RGB2GRAY)
+        # gray = np.expand_dims(gray, axis=-1)
+        # return gray
         observation = cv2.resize(observation["screen"], self.image_shape_reverse)
-        gray = cv2.cvtColor(observation, cv2.COLOR_RGB2GRAY)
-        gray = np.expand_dims(gray, axis=-1)
-        return gray
+        return observation
 
 class EpsilonLogger(callbacks.BaseCallback):
     def __init__(self, log_dir, verbose=0):
@@ -388,16 +390,16 @@ if __name__ == "__main__":
                         agent = PPO(
                             "CnnPolicy",
                             train_env,
-                            n_steps=2048,
+                            n_steps=params.get("n_steps", 2048),
                             batch_size=params.get("batch_size", 64),
-                            learning_rate=1e-4,
+                            learning_rate=3e-4,#params.get("learning_rate", 3e-4),
                             gamma=params.get("gamma", 0.99),
-                            gae_lambda=params.get("gae_lambda", 0.95),
+                            #gae_lambda=params.get("gae_lambda", 0.95),
                             clip_range=params.get("clip_range", 0.2),
-                            ent_coef=0.2,
+                            ent_coef=params.get("ent_coef", 0.05),
                             vf_coef=params.get("vf_coef", 0.5),
                             clip_range_vf=params.get("clip_range_vf", None),
-                            target_kl=params.get("target_kl", 0.01),
+                            #target_kl=params.get("target_kl", 0.01),
                             verbose=1,
                             device='cuda'
                         )
@@ -406,16 +408,16 @@ if __name__ == "__main__":
                         agent = PPO(
                             "CnnPolicy",
                             train_env,
-                            n_steps=2048,
+                            n_steps=params.get("n_steps", 2048),
                             batch_size=params.get("batch_size", 64),
-                            learning_rate=1e-4,
+                            learning_rate=params.get("learning_rate", 3e-4),
                             gamma=params.get("gamma", 0.99),
-                            gae_lambda=params.get("gae_lambda", 0.95),
+                            #gae_lambda=params.get("gae_lambda", 0.95),
                             clip_range=params.get("clip_range", 0.2),
-                            ent_coef=0.2,
+                            ent_coef=params.get("ent_coef", 0.05),
                             vf_coef=params.get("vf_coef", 0.5),
                             clip_range_vf=params.get("clip_range_vf", None),
-                            target_kl=params.get("target_kl", 0.01),
+                            #target_kl=params.get("target_kl", 0.01),
                             verbose=1,
                             device='cuda'
                         )

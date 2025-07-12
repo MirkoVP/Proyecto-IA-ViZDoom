@@ -44,13 +44,13 @@ FRAME_SKIP = 4
 #TIC_RATE = 560
 
 CURRENT_DIR = Path(os.path.abspath('')).resolve()
-old_save = False # True to load old models, False to train from scratch
-old_dir_dqn = CURRENT_DIR.parent / "trains" / "take-cover" / "dqn-Seba-v2-1"
-old_dir_ppo = CURRENT_DIR.parent / "trains" / "take-cover" / "ppo-Seba-v2-1"
+old_save = True # True to load old models, False to train from scratch
+old_dir_dqn = CURRENT_DIR.parent / "trains" / "take-cover" / "dqn-Seba-v3-1"
+old_dir_ppo = CURRENT_DIR.parent / "trains" / "take-cover" / "ppo-Seba-v3-1"
 
 #num = f"2-btn(menos)-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
 #num = f"4-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
-num = f"Seba-v3-1"
+num = f"Seba-v3-2"
 
 class RewardShapingWrapper(RewardWrapper):
     def __init__(self, env, hit_taken_penalty=-50): #, damage_reward=50, kill_reward = 150.0, ammo_penalty=-50, step_penalty=-1.0
@@ -222,11 +222,11 @@ class ObservationWrapper(gym.ObservationWrapper):
         self.image_shape = shape
         self.image_shape_reverse = shape[::-1]
 
-        #Set number of channels to 1 for grayscale
-        new_shape = (shape[0], shape[1], 1)
-        self.observation_space = gym.spaces.Box(
-            0, 255, shape=new_shape, dtype=np.uint8
-        )
+        # #Set number of channels to 1 for grayscale
+        # new_shape = (shape[0], shape[1], 1)
+        # self.observation_space = gym.spaces.Box(
+        #     0, 255, shape=new_shape, dtype=np.uint8
+        # )
 
         # Create new observation space with the new shape
         num_channels = env.observation_space["screen"].shape[-1]
@@ -236,10 +236,12 @@ class ObservationWrapper(gym.ObservationWrapper):
         )
 
     def observation(self, observation):
+        # observation = cv2.resize(observation["screen"], self.image_shape_reverse)
+        # gray = cv2.cvtColor(observation, cv2.COLOR_RGB2GRAY)
+        # gray = np.expand_dims(gray, axis=-1)
+        # return gray
         observation = cv2.resize(observation["screen"], self.image_shape_reverse)
-        gray = cv2.cvtColor(observation, cv2.COLOR_RGB2GRAY)
-        gray = np.expand_dims(gray, axis=-1)
-        return gray
+        return observation
 
 class EpsilonLogger(callbacks.BaseCallback):
     def __init__(self, log_dir, verbose=0):
