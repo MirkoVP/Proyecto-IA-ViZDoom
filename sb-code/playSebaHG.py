@@ -17,7 +17,7 @@ ENV = "VizdoomHealthGathering-v0"
 RESOLUTION = (60, 45)
 
 model = "dqn"
-num = "Seba-v4-2"
+num = "Seba-v4-3"
 map = "health-gathering"
 #map = "take-cover"
 CURRENT_DIR = Path(os.path.abspath('')).resolve()

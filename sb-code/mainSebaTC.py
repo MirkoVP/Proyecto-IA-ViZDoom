@@ -30,27 +30,27 @@ MAP_LIST = [
 ]
 
 MODEL_LIST = [
-    #"dqn",
-    "ppo"
+    "dqn",
+    #"ppo"
 ]
 
 RESOLUTION = (60, 45)
 # NUM_EPISODES = 50
 # EPISODE_LENGTH = 80
 # TRAINING_TIMESTEPS = int(NUM_EPISODES * EPISODE_LENGTH)
-TRAINING_TIMESTEPS = int(2e5)  # 600k 200k 1000k 2e5
+TRAINING_TIMESTEPS = int(4e5)  # 600k 200k 1000k 2e5
 N_ENVS = 1
 FRAME_SKIP = 4
 #TIC_RATE = 560
 
 CURRENT_DIR = Path(os.path.abspath('')).resolve()
 old_save = True # True to load old models, False to train from scratch
-old_dir_dqn = CURRENT_DIR.parent / "trains" / "take-cover" / "dqn-Seba-v3-1"
-old_dir_ppo = CURRENT_DIR.parent / "trains" / "take-cover" / "ppo-Seba-v3-1"
+old_dir_dqn = CURRENT_DIR.parent / "trains" / "take-cover" / "dqn-Seba-v3-2"
+old_dir_ppo = CURRENT_DIR.parent / "trains" / "take-cover" / "ppo-Seba-v3-2"
 
 #num = f"2-btn(menos)-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
 #num = f"4-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
-num = f"Seba-v3-2"
+num = f"Seba-v3-3"
 
 class RewardShapingWrapper(RewardWrapper):
     def __init__(self, env, hit_taken_penalty=-50): #, damage_reward=50, kill_reward = 150.0, ammo_penalty=-50, step_penalty=-1.0
@@ -341,7 +341,8 @@ if __name__ == "__main__":
                             verbose=1,
                             device='cuda'
                         )
-                        #agent.load_replay_buffer(f"{old_dir_dqn}/saves/replay_buffer")
+                        #agent.load(str(old_dir_dqn / "saves" / "dqn_vizdoom.zip"))
+                        #agent.load_replay_buffer(str(old_dir_dqn / "saves" / "replay_buffer"))
                         agent.policy.load(str(old_dir_dqn / "policy" / "pesos.zip"))
                     else:
                         agent = DQN(

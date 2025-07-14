@@ -44,13 +44,13 @@ FRAME_SKIP = 4
 #TIC_RATE = 560
 
 CURRENT_DIR = Path(os.path.abspath('')).resolve()
-old_save = False # True to load old models, False to train from scratch
-old_dir_dqn = CURRENT_DIR.parent / "trains" / "health-gathering" / "dqn-Seba-v4-1"
-old_dir_ppo = CURRENT_DIR.parent / "trains" / "health-gathering" / "ppo-Seba-v4-1"
+old_save = True # True to load old models, False to train from scratch
+old_dir_dqn = CURRENT_DIR.parent / "trains" / "health-gathering" / "dqn-Seba-v4-2"
+old_dir_ppo = CURRENT_DIR.parent / "trains" / "health-gathering" / "ppo-Seba-v4-2"
 
 #num = f"2-btn(menos)-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
 #num = f"4-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
-num = f"Seba-v4-2"
+num = f"Seba-v4-3"
 
 class RewardShapingWrapper(RewardWrapper):
     def __init__(self, env, above_70_reward=1, healings_rewards=20): #, damage_reward=50, kill_reward = 150.0, ammo_penalty=-50, step_penalty=-1.0
@@ -353,7 +353,8 @@ if __name__ == "__main__":
                             verbose=1,
                             device='cuda'
                         )
-                        #agent.load_replay_buffer(f"{old_dir_dqn}/saves/replay_buffer")
+                        #agent.load(str(old_dir_dqn / "saves" / "dqn_vizdoom.zip"))
+                        #agent.load_replay_buffer(str(old_dir_dqn / "saves" / "replay_buffer"))
                         agent.policy.load(str(old_dir_dqn / "policy" / "pesos.zip"))
                     else:
                         agent = DQN(
