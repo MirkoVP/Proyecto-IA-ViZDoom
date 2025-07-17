@@ -30,8 +30,8 @@ MAP_LIST = [
 ]
 
 MODEL_LIST = [
-    "dqn",
-    #"ppo"
+    #"dqn",
+    "ppo"
 ]
 
 RESOLUTION = (60, 45)
@@ -45,12 +45,12 @@ FRAME_SKIP = 4
 
 CURRENT_DIR = Path(os.path.abspath('')).resolve()
 old_save = True # True to load old models, False to train from scratch
-old_dir_dqn = CURRENT_DIR.parent / "trains" / "take-cover" / "dqn-Seba-v3-2"
-old_dir_ppo = CURRENT_DIR.parent / "trains" / "take-cover" / "ppo-Seba-v3-2"
+old_dir_dqn = CURRENT_DIR.parent / "trains" / "take-cover" / "dqn-Seba-v3-3"
+old_dir_ppo = CURRENT_DIR.parent / "trains" / "take-cover" / "ppo-Seba-v3-3"
 
 #num = f"2-btn(menos)-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
 #num = f"4-fs({FRAME_SKIP})-steps({TRAINING_TIMESTEPS})"
-num = f"Seba-v3-3"
+num = f"Seba-v3-4"
 
 class RewardShapingWrapper(RewardWrapper):
     def __init__(self, env, hit_taken_penalty=-50): #, damage_reward=50, kill_reward = 150.0, ammo_penalty=-50, step_penalty=-1.0

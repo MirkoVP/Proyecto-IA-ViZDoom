@@ -15,8 +15,8 @@ import vizdoom.gymnasium_wrapper
 ENV = "VizdoomTakeCover-v0"
 RESOLUTION = (60, 45)
 
-model = "dqn"
-num = "Seba-v3-3"
+model = "ppo"
+num = "Seba-v3-2"
 map = "take-cover"
 CURRENT_DIR = Path(os.path.abspath('')).resolve()
 #MODEL_PATH = f"trains/{map}/{model}-{num}/saves/{model}_vizdoom"
